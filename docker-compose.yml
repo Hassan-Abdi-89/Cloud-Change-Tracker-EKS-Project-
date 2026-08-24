@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: cloud-change-app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: changes
+      DATABASE_USER: changes
+      DATABASE_PASSWORD: change-me
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    container_name: cloud-change-db
+    environment:
+      POSTGRES_DB: changes
+      POSTGRES_USER: changes
+      POSTGRES_PASSWORD: change-me
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U changes -d changes"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
